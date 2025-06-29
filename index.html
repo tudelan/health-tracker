@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health & Wellness Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #e5e7eb; }
+        .blue { background-color: #eff6ff; border-color: #bfdbfe; }
+        .green { background-color: #f0fdf4; border-color: #bbf7d0; }
+        .yellow { background-color: #fffbeb; border-color: #fed7aa; }
+        .purple { background-color: #faf5ff; border-color: #e9d5ff; }
+        .button { background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .button:hover { background: #2563eb; }
+        .checkbox { margin-right: 10px; }
+        .meal-btn { display: block; width: 100%; text-align: left; padding: 10px; margin: 5px 0; border: 1px solid #d1d5db; border-radius: 5px; background: white; cursor: pointer; }
+        .meal-btn:hover { background: #f9fafb; }
+        .meal-btn.selected { background: #dcfce7; border-color: #16a34a; }
+        .input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 5px; margin: 5px 0; }
+        .tab { padding: 10px 20px; margin-right: 10px; border: none; border-radius: 5px; cursor: pointer; }
+        .tab.active { background: #3b82f6; color: white; }
+        .tab.inactive { background: #f3f4f6; color: #374151; }
+        .progress-bar { width: 100%; height: 20px; background: #e5e7eb; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #3b82f6; transition: width 0.3s; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .score-box { text-align: center; padding: 20px; border-radius: 10px; }
+        .score-number { font-size: 2em; font-weight: bold; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>🏥 Health & Wellness Tracker</h1>
+        
+        <div style="margin-bottom: 20px;">
+            <input type="date" id="currentDate" class="input" style="width: auto; margin-right: 20px;">
+            <span id="dailyScore">Daily Score: 0/10</span>
+            <span style="color: green; margin-left: 10px;">✓ Auto-saved</span>
+        </div>
+
+        <!-- Tabs -->
+        <div style="margin-bottom: 20px;">
+            <button class="tab active" onclick="showTab('today')">📅 Today</button>
+            <button class="tab inactive" onclick="showTab('progress')">📊 Progress</button>
+        </div>
+
+        <!-- Today Tab -->
+        <div id="todayTab">
+            <!-- Quick Stats -->
+            <div class="grid" style="margin-bottom: 30px;">
+                <div class="container blue score-box">
+                    <div>💧</div>
+                    <div class="score-number" id="hydrationCount">0</div>
+                    <div>glasses water</div>
+                </div>
+                <div class="container green score-box">
+                    <div>🎯</div>
+                    <div class="score-number" id="streakCount">0</div>
+                    <div>day streak</div>
+                </div>
+                <div class="container purple score-box">
+                    <div>📈</div>
+                    <div class="score-number" id="energyLevel">5</div>
+                    <div>energy level</div>
+                </div>
+            </div>
+
+            <div class="grid">
+                <!-- Supplements -->
+                <div class="container yellow">
+                    <h2>💊 Supplement Schedule</h2>
+                    
+                    <label style="display: block; margin: 10px 0; padding: 10px; background: white; border-radius: 5px;">
+                        <input type="checkbox" class="checkbox" id="morningTinctures" onchange="saveData()">
+                        Morning Liquid Tinctures (2 drops)
+                    </label>
+                    
+                    <label style="display: block; margin: 10px 0; padding: 10px; background: white; border-radius: 5px;" id="pillsLabel">
+                        <input type="checkbox" class="checkbox" id="delayedPills" onchange="saveData()">
+                        Pills (2 hours after tinctures)
+                    </label>
+
+                    <h3>Pre-Meal Supplements</h3>
+                    <div id="preMealSupplements">
+                        <div style="margin: 10px 0; padding: 10px; background: white; border-radius: 5px;">
+                            <strong>Breakfast:</strong>
+                            <label style="margin-left: 20px;"><input type="checkbox" id="enzymesBreakfast" onchange="saveData()"> Enzymes</label>
+                            <label style="margin-left: 20px;"><input type="checkbox" id="bittersBreakfast" onchange="saveData()"> Bitters</label>
+                        </div>
+                        <div style="margin: 10px 0; padding: 10px; background: white; border-radius: 5px;">
+                            <strong>Lunch:</strong>
+                            <label style="margin-left: 20px;"><input type="checkbox" id="enzymesLunch" onchange="saveData()"> Enzymes</label>
+                            <label style="margin-left: 20px;"><input type="checkbox" id="bittersLunch" onchange="saveData()"> Bitters</label>
+                        </div>
+                        <div style="margin: 10px 0; padding: 10px; background: white; border-radius: 5px;">
+                            <strong>Dinner:</strong>
+                            <label style="margin-left: 20px;"><input type="checkbox" id="enzymesDinner" onchange="saveData()"> Enzymes</label>
+                            <label style="margin-left: 20px;"><input type="checkbox" id="bittersDinner" onchange="saveData()"> Bitters</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Meals -->
+                <div class="container green">
+                    <h2>🍎 Meal Tracking</h2>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h3>Breakfast</h3>
+                        <button class="meal-btn" onclick="selectMeal('breakfast', 'Scrambled eggs with spinach and cherry tomatoes + whole grain toast with avocado')">Scrambled eggs with spinach and cherry tomatoes + whole grain toast with avocado</button>
+                        <button class="meal-btn" onclick="selectMeal('breakfast', 'Greek yogurt with berries and nuts')">Greek yogurt with berries and nuts</button>
+                        <button class="meal-btn" onclick="selectMeal('breakfast', 'Protein smoothie with spinach, berries, protein powder, almond milk')">Protein smoothie with spinach, berries, protein powder, almond milk</button>
+                        <input type="text" class="input" placeholder="Or write your own breakfast..." onkeypress="handleCustomMeal(event, 'breakfast')">
+                        <div id="selectedBreakfast" style="margin-top: 10px; padding: 10px; background: #dcfce7; border-radius: 5px; display: none;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h3>Lunch</h3>
+                        <button class="meal-btn" onclick="selectMeal('lunch', 'Large salad with mixed greens, grilled protein, chickpeas, nuts, olive oil dressing')">Large salad with mixed greens, grilled protein, chickpeas, nuts, olive oil dressing</button>
+                        <button class="meal-btn" onclick="selectMeal('lunch', 'Grain bowl with quinoa, roasted vegetables, protein of choice')">Grain bowl with quinoa, roasted vegetables, protein of choice</button>
+                        <button class="meal-btn" onclick="selectMeal('lunch', 'Soup with beans/lentils plus side salad')">Soup with beans/lentils plus side salad</button>
+                        <input type="text" class="input" placeholder="Or write your own lunch..." onkeypress="handleCustomMeal(event, 'lunch')">
+                        <div id="selectedLunch" style="margin-top: 10px; padding: 10px; background: #dcfce7; border-radius: 5px; display: none;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h3>Dinner</h3>
+                        <button class="meal-btn" onclick="selectMeal('dinner', 'Salmon (4-6oz) + roasted Brussels sprouts + quinoa')">Salmon (4-6oz) + roasted Brussels sprouts + quinoa</button>
+                        <button class="meal-btn" onclick="selectMeal('dinner', 'Steak (4-6oz) + sautéed green beans + brown rice')">Steak (4-6oz) + sautéed green beans + brown rice</button>
+                        <button class="meal-btn" onclick="selectMeal('dinner', 'Turkey (4-6oz) + steamed broccoli + sweet potato')">Turkey (4-6oz) + steamed broccoli + sweet potato</button>
+                        <input type="text" class="input" placeholder="Or write your own dinner..." onkeypress="handleCustomMeal(event, 'dinner')">
+                        <div id="selectedDinner" style="margin-top: 10px; padding: 10px; background: #dcfce7; border-radius: 5px; display: none;"></div>
+                    </div>
+
+                    <div>
+                        <h3>Snacks</h3>
+                        <button class="meal-btn" onclick="addSnack('Apple slices with almond butter')">+ Apple slices with almond butter</button>
+                        <button class="meal-btn" onclick="addSnack('String cheese with grapes')">+ String cheese with grapes</button>
+                        <button class="meal-btn" onclick="addSnack('Trail mix (nuts, seeds, dried fruit)')">+ Trail mix (nuts, seeds, dried fruit)</button>
+                        <input type="text" class="input" placeholder="Or write your own snack..." onkeypress="handleCustomSnack(event)">
+                        <div id="snacksList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hydration -->
+            <div class="container blue">
+                <h2>💧 Hydration Tracking</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <span id="hydrationText">0/8 glasses</span>
+                    <div>
+                        <button class="button" onclick="updateHydration(1)">+1</button>
+                        <button class="button" onclick="updateHydration(-1)">-1</button>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="hydrationBar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Daily Check-in -->
+            <div class="container purple">
+                <h2>Daily Check-in</h2>
+                
+                <label>Weight (optional)</label>
+                <input type="number" class="input" id="weight" placeholder="Enter weight" onchange="saveData()">
+                
+                <label>Energy Level: <span id="energyDisplay">5</span>/10</label>
+                <input type="range" class="input" min="1" max="10" value="5" id="energy" oninput="updateEnergy(this.value)">
+                
+                <label>Mood: <span id="moodDisplay">5</span>/10</label>
+                <input type="range" class="input" min="1" max="10" value="5" id="mood" oninput="updateMood(this.value)">
+                
+                <label>Notes</label>
+                <textarea class="input" id="notes" rows="3" placeholder="How did today go? Any observations?" onchange="saveData()"></textarea>
+            </div>
+        </div>
+
+        <!-- Progress Tab -->
+        <div id="progressTab" style="display: none;">
+            <div class="grid">
+                <div class="container green score-box">
+                    <h3>💊 Supplement Streak</h3>
+                    <div class="score-number" id="supplementStreak">0</div>
+                    <div>consecutive days</div>
+                </div>
+                <div class="container blue score-box">
+                    <h3>💧 Hydration Streak</h3>
+                    <div class="score-number" id="hydrationStreak">0</div>
+                    <div>consecutive days</div>
+                </div>
+                <div class="container purple score-box">
+                    <h3>📊 Weekly Average</h3>
+                    <div class="score-number" id="weeklyAverage">0.0</div>
+                    <div>daily score</div>
+                </div>
+            </div>
+
+            <div class="container">
+                <h3>📅 7-Day Overview</h3>
+                <div id="weeklyOverview" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 20px;">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+                
+                <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px; font-size: 14px;">
+                    <div><span style="display: inline-block; width: 15px; height: 15px; background: #10b981; margin-right: 5px;"></span>Excellent (8-10)</div>
+                    <div><span style="display: inline-block; width: 15px; height: 15px; background: #f59e0b; margin-right: 5px;"></span>Good (6-7)</div>
+                    <div><span style="display: inline-block; width: 15px; height: 15px; background: #f97316; margin-right: 5px;"></span>Fair (3-5)</div>
+                    <div><span style="display: inline-block; width: 15px; height: 15px; background: #ef4444; margin-right: 5px;"></span>Needs Work (1-2)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentData = {};
+        let currentDate = new Date().toISOString().split('T')[0];
+        let showingPillReminder = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('currentDate').value = currentDate;
+            document.getElementById('currentDate').addEventListener('change', function(e) {
+                currentDate = e.target.value;
+                loadData();
+            });
+            loadData();
+        });
+
+        // Tab switching
+        function showTab(tabName) {
+            if (tabName === 'today') {
+                document.getElementById('todayTab').style.display = 'block';
+                document.getElementById('progressTab').style.display = 'none';
+                document.querySelectorAll('.tab')[0].className = 'tab active';
+                document.querySelectorAll('.tab')[1].className = 'tab inactive';
+            } else {
+                document.getElementById('todayTab').style.display = 'none';
+                document.getElementById('progressTab').style.display = 'block';
+                document.querySelectorAll('.tab')[0].className = 'tab inactive';
+                document.querySelectorAll('.tab')[1].className = 'tab active';
+                updateProgress();
+            }
+        }
+
+        function getDefaultData() {
+            return {
+                supplements: {
+                    morningTinctures: false,
+                    delayedPills: false,
+                    enzymes: { breakfast: false, lunch: false, dinner: false },
+                    bitters: { breakfast: false, lunch: false, dinner: false }
+                },
+                meals: { breakfast: '', lunch: '', dinner: '', snacks: [] },
+                hydration: 0,
+                weight: '',
+                energy: 5,
+                mood: 5,
+                notes: ''
+            };
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem(`tracker-${currentDate}`);
+            if (saved) {
+                try {
+                    currentData = JSON.parse(saved);
+                    // Ensure all properties exist
+                    if (!currentData.supplements) currentData.supplements = {};
+                    if (!currentData.supplements.enzymes) currentData.supplements.enzymes = {};
+                    if (!currentData.supplements.bitters) currentData.supplements.bitters = {};
+                    if (!currentData.meals) currentData.meals = {};
+                    if (!currentData.meals.snacks) currentData.meals.snacks = [];
+                } catch (e) {
+                    console.log('Error parsing saved data, using defaults');
+                    currentData = getDefaultData();
+                }
+            } else {
+                currentData = getDefaultData();
+            }
+            
+            updateUI();
+        }
+
+        function updateUI() {
+            // Update checkboxes safely
+            const checkboxes = {
+                'morningTinctures': currentData.supplements?.morningTinctures || false,
+                'delayedPills': currentData.supplements?.delayedPills || false,
+                'enzymesBreakfast': currentData.supplements?.enzymes?.breakfast || false,
+                'enzymesLunch': currentData.supplements?.enzymes?.lunch || false,
+                'enzymesDinner': currentData.supplements?.enzymes?.dinner || false,
+                'bittersBreakfast': currentData.supplements?.bitters?.breakfast || false,
+                'bittersLunch': currentData.supplements?.bitters?.lunch || false,
+                'bittersDinner': currentData.supplements?.bitters?.dinner || false
+            };
+
+            Object.entries(checkboxes).forEach(([id, checked]) => {
+                const element = document.getElementById(id);
+                if (element) element.checked = checked;
+            });
+            
+            // Update other fields safely
+            const weightEl = document.getElementById('weight');
+            const energyEl = document.getElementById('energy');
+            const moodEl = document.getElementById('mood');
+            const notesEl = document.getElementById('notes');
+            
+            if (weightEl) weightEl.value = currentData.weight || '';
+            if (energyEl) energyEl.value = currentData.energy || 5;
+            if (moodEl) moodEl.value = currentData.mood || 5;
+            if (notesEl) notesEl.value = currentData.notes || '';
+            
+            updateHydrationDisplay();
+            updateEnergy(currentData.energy || 5);
+            updateMood(currentData.mood || 5);
+            updateMeals();
+            updateSnacks();
+            updateScore();
+            
+            showingPillReminder = false;
+            const pillsLabel = document.getElementById('pillsLabel');
+            if (pillsLabel) pillsLabel.style.background = 'white';
+        }
+
+        // Data management
+        function saveData() {
+            // Get all checkbox states
+            currentData.supplements.morningTinctures = document.getElementById('morningTinctures').checked;
+            currentData.supplements.delayedPills = document.getElementById('delayedPills').checked;
+            currentData.supplements.enzymes.breakfast = document.getElementById('enzymesBreakfast').checked;
+            currentData.supplements.enzymes.lunch = document.getElementById('enzymesLunch').checked;
+            currentData.supplements.enzymes.dinner = document.getElementById('enzymesDinner').checked;
+            currentData.supplements.bitters.breakfast = document.getElementById('bittersBreakfast').checked;
+            currentData.supplements.bitters.lunch = document.getElementById('bittersLunch').checked;
+            currentData.supplements.bitters.dinner = document.getElementById('bittersDinner').checked;
+            
+            // Get other inputs
+            currentData.weight = document.getElementById('weight').value;
+            currentData.energy = parseInt(document.getElementById('energy').value);
+            currentData.mood = parseInt(document.getElementById('mood').value);
+            currentData.notes = document.getElementById('notes').value;
+
+            // Save to localStorage
+            localStorage.setItem(`tracker-${currentDate}`, JSON.stringify(currentData));
+            
+            // Update displays
+            updateScore();
+            
+            // Check for pill reminder
+            if (currentData.supplements.morningTinctures && !showingPillReminder) {
+                setTimeout(() => {
+                    if (!currentData.supplements.delayedPills) {
+                        document.getElementById('pillsLabel').style.background = '#fee2e2';
+                        document.getElementById('pillsLabel').innerHTML = document.getElementById('pillsLabel').innerHTML.replace('Pills (2 hours after tinctures)', 'Pills (2 hours after tinctures) ⏰ TIME TO TAKE!');
+                        showingPillReminder = true;
+                    }
+                }, 3000); // 3 seconds for demo
+            }
+        }
+
+        // Meal functions
+        function selectMeal(mealType, meal) {
+            currentData.meals[mealType] = meal;
+            updateMeals();
+            saveData();
+        }
+
+        function handleCustomMeal(event, mealType) {
+            if (event.key === 'Enter' && event.target.value.trim()) {
+                selectMeal(mealType, event.target.value.trim());
+                event.target.value = '';
+            }
+        }
+
+        function updateMeals() {
+            ['breakfast', 'lunch', 'dinner'].forEach(mealType => {
+                const selectedDiv = document.getElementById(`selected${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
+                if (selectedDiv && currentData.meals && currentData.meals[mealType]) {
+                    selectedDiv.style.display = 'block';
+                    selectedDiv.innerHTML = `✓ Selected: ${currentData.meals[mealType]}`;
+                } else if (selectedDiv) {
+                    selectedDiv.style.display = 'none';
+                }
+            });
+        }
+
+        // Snack functions
+        function addSnack(snack) {
+            if (!currentData.meals.snacks) {
+                currentData.meals.snacks = [];
+            }
+            currentData.meals.snacks.push(snack);
+            updateSnacks();
+            saveData();
+        }
+
+        function handleCustomSnack(event) {
+            if (event.key === 'Enter' && event.target.value.trim()) {
+                addSnack(event.target.value.trim());
+                event.target.value = '';
+            }
+        }
+
+        function removeSnack(index) {
+            currentData.meals.snacks.splice(index, 1);
+            updateSnacks();
+            saveData();
+        }
+
+        function updateSnacks() {
+            const snacksList = document.getElementById('snacksList');
+            if (currentData.meals && currentData.meals.snacks && currentData.meals.snacks.length > 0) {
+                snacksList.innerHTML = '<h4>Today\'s Snacks:</h4>' + 
+                    currentData.meals.snacks.map((snack, index) => 
+                        `<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #dcfce7; border-radius: 5px; margin: 5px 0;">
+                            <span>${snack}</span>
+                            <button onclick="removeSnack(${index})" style="background: #ef4444; color: white; border: none; border-radius: 3px; padding: 5px 10px; cursor: pointer;">×</button>
+                        </div>`
+                    ).join('');
+            } else {
+                snacksList.innerHTML = '';
+            }
+        }
+
+        // Hydration functions
+        function updateHydration(amount) {
+            currentData.hydration = Math.max(0, currentData.hydration + amount);
+            updateHydrationDisplay();
+            saveData();
+        }
+
+        function updateHydrationDisplay() {
+            document.getElementById('hydrationText').textContent = `${currentData.hydration}/8 glasses`;
+            document.getElementById('hydrationCount').textContent = currentData.hydration;
+            const percentage = Math.min((currentData.hydration / 8) * 100, 100);
+            document.getElementById('hydrationBar').style.width = percentage + '%';
+        }
+
+        // Energy and mood functions
+        function updateEnergy(value) {
+            currentData.energy = parseInt(value);
+            document.getElementById('energyDisplay').textContent = value;
+            document.getElementById('energyLevel').textContent = value;
+            saveData();
+        }
+
+        function updateMood(value) {
+            currentData.mood = parseInt(value);
+            document.getElementById('moodDisplay').textContent = value;
+            saveData();
+        }
+
+        // Score calculation
+        function calculateScore(data) {
+            if (!data) return 0;
+            
+            let score = 0;
+            
+            // Supplements (count checkboxes)
+            const supplements = data.supplements || {};
+            if (supplements.morningTinctures) score++;
+            if (supplements.delayedPills) score++;
+            
+            if (supplements.enzymes) {
+                Object.values(supplements.enzymes).forEach(val => { if (val) score++; });
+            }
+            if (supplements.bitters) {
+                Object.values(supplements.bitters).forEach(val => { if (val) score++; });
+            }
+            
+            // Meals (count filled meals)
+            const meals = data.meals || {};
+            if (meals.breakfast) score++;
+            if (meals.lunch) score++;
+            if (meals.dinner) score++;
+            
+            // Hydration (bonus for hitting target)
+            if (data.hydration >= 6) score += 2;
+            
+            return Math.min(score, 10);
+        }
+
+        function updateScore() {
+            const score = calculateScore(currentData);
+            document.getElementById('dailyScore').textContent = `Daily Score: ${score}/10`;
+        }
+
+        // Progress functions
+        function updateProgress() {
+            const streaks = calculateStreaks();
+            document.getElementById('supplementStreak').textContent = streaks.supplements;
+            document.getElementById('hydrationStreak').textContent = streaks.hydration;
+            
+            const weeklyData = getWeeklyData();
+            const average = weeklyData.reduce((sum, day) => sum + day.score, 0) / 7;
+            document.getElementById('weeklyAverage').textContent = average.toFixed(1);
+            
+            updateWeeklyOverview(weeklyData);
+        }
+
+        function calculateStreaks() {
+            let supplementStreak = 0;
+            let hydrationStreak = 0;
+            
+            for (let i = 0; i < 7; i++) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                const saved = localStorage.getItem(`tracker-${dateStr}`);
+                
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    if (data.supplements.morningTinctures && data.supplements.delayedPills) {
+                        supplementStreak++;
+                    } else if (i > 0) break;
+                    
+                    if (data.hydration >= 6) {
+                        hydrationStreak++;
+                    } else if (i > 0) break;
+                } else if (i > 0) {
+                    break;
+                }
+            }
+            
+            return { supplements: supplementStreak, hydration: hydrationStreak };
+        }
+
+        function getWeeklyData() {
+            const days = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                const saved = localStorage.getItem(`tracker-${dateStr}`);
+                const data = saved ? JSON.parse(saved) : null;
+                
+                days.push({
+                    date: dateStr,
+                    dayName: date.toLocaleDateString('en', { weekday: 'short' }),
+                    score: data ? calculateScore(data) : 0
+                });
+            }
+            return days;
+        }
+
+        function updateWeeklyOverview(weeklyData) {
+            const overview = document.getElementById('weeklyOverview');
+            overview.innerHTML = weeklyData.map(day => {
+                let color = '#e5e7eb'; // gray
+                if (day.score >= 8) color = '#10b981'; // green
+                else if (day.score >= 6) color = '#f59e0b'; // yellow
+                else if (day.score >= 3) color = '#f97316'; // orange
+                else if (day.score > 0) color = '#ef4444'; // red
+                
+                return `
+                    <div style="text-align: center;">
+                        <div style="font-size: 14px; margin-bottom: 5px;">${day.dayName}</div>
+                        <div style="width: 100%; height: 60px; background: ${color}; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">
+                            ${day.score > 0 ? day.score : '—'}
+                        </div>
+                        <div style="font-size: 12px; margin-top: 5px; color: #6b7280;">
+                            ${day.date === new Date().toISOString().split('T')[0] ? 'Today' : new Date(day.date).getDate()}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    </script>
+</body>
+</html>
